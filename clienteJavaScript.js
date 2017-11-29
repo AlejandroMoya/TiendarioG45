@@ -34,7 +34,7 @@ function main() {
 	
 	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar");
 	// Mensaje de inicio, Cliente --> Monitor
-	//sender(urlMonitor, Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
+	sender(urlMonitor, Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
 /*
 	var pepe = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><root><CM1><identificador>456</identificador><emisor>0</emisor><receptor>clanjhoo.com:1880</receptor><time><timestamp>1511871329825</timestamp><creador>161.67.174.38</creador></time><listaTiendas><tienda><id>1</id><ip>777</ip><tipo>4</tipo></tienda><tienda><id>2</id><ip>888</ip><tipo>6</tipo></tienda></listaTiendas><listaCompras><producto><nombre>patata</nombre><cantidad>3</cantidad></producto><producto><nombre>pafsd</nombre><cantidad>6</cantidad></producto></listaCompras></CM1><TC2/></root>'
 	var parser = new DOMParser();
@@ -49,11 +49,13 @@ function main() {
 // Función que nos permite mandar un XML dada la URL de envio (direccion) y el mensaje (mensaje)
 function sender(direccion, mensaje, dirMonitor) {
 	// Mensaje enviado a la direccion deseada
+	var estado=-1;
 	console.log(direccion)
 	$.ajax({
 		url: 'http://' + direccion.replace("http://", "").replace(/\/\//g,"/"),             
 		data: mensaje,
 		type: "POST",
+		async: false,
 		dataType: 'text',
 		contentType: 'text/xml',
 
@@ -64,13 +66,14 @@ function sender(direccion, mensaje, dirMonitor) {
 		success: function(response) {
 			console.log("Mensaje recibido: " + response);
 			contadorMensajes++;
-			
+			estado=0; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
 			// Mensaje replica para el monitor
 			if (direccion !== dirMonitor){
 				$.ajax({
 					url: dirMonitor,                   
-					type: "POST",               
+					type: "POST",
+					async: false,
 					data: mensaje,                                                      
 					contentType: "text/xml",
 
@@ -109,12 +112,13 @@ function sender(direccion, mensaje, dirMonitor) {
 							console.log("Mensaje: " + response);
 							console.log("Mensaje parseado: " + response_xml);
 						}
-						
+						//El estado sigue a cero, por lo tanto todo va bien
 						
 					},
 
 					error: function(response) {
 						console.log("Monitor:" + response);
+						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
 					}
 				});
 			}
@@ -154,6 +158,7 @@ function sender(direccion, mensaje, dirMonitor) {
 
 		error: function(response) {
 			console.log(response);
+			estado=1; //Código de error 1: no ha llegado al destinatario
 		}
 	});
 }
@@ -276,8 +281,8 @@ function parser_MC2(xml){
 	if (contadorMensajesR == (contadorMensajes+1)){
 		contadorMensajes++;
 	}else{
-		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
-		return 0;
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
 	}
 	
 	// Obtenemos las tiendas que el monitor nos pasa, para ello localizamos la etiqueta "tienda"
@@ -298,8 +303,8 @@ function parser_MC2(xml){
 		productos.push(compra);
 	}
 	
-	// Codigo de acierto 1: todo se ha parseado correctamente.
-	return 1;
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
 }
 // Este mensaje se recibirá cuando enviemos el mensaje CM3 (mensaje de finalización)
 // Este mensaje es una respuesta del monitor.
@@ -309,11 +314,11 @@ function parser_MC4(xml){
 	if (contadorMensajesR == (contadorMensajes+1)){
 		contadorMensajes++;
 	}else{
-		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
-		return 0;
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
 	}
-	// Codigo de acierto 1: todo se ha parseado correctamente.
-	return 1;
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
 }
 // Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
 // Este mensaje es una respuesta de la tienda para decirnos que no puede atendernos, esta llena.
@@ -322,11 +327,11 @@ function parser_TC2(xml){
 	if (contadorMensajesR == (contadorMensajes+1)){
 		contadorMensajes++;
 	}else{
-		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
-		return 0;
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
 	}
-	// Codigo de acierto 1: todo se ha parseado correctamente.
-	return 1;
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
 }
 // Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
 // Este mensaje es una respuesta de la tienda para decirnos que hemos comprado X productos.
@@ -336,8 +341,8 @@ function parser_TC3(xml){
 	if (contadorMensajesR == (contadorMensajes+1)){
 		contadorMensajes++;
 	}else{
-		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
-		return 0;
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
 	}
 	
 	// Obtenemos las productos que hemos comprado, para ello localizamos la etiqueta "producto"
@@ -357,8 +362,8 @@ function parser_TC3(xml){
 		}
 	}
 	
-	// Codigo de acierto 1: todo se ha parseado correctamente.
-	return 1;
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
 	
 }
 
