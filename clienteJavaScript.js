@@ -1,9 +1,11 @@
 /*
 Cliente JavaScript
-Rev: 0.3
+Rev: 0.4
 Fecha: 29/11/2017
 Autores: Alejandro Moya Moya
 		 Jorge Valero Molina
+		 Francisco Martinez Esteso
+		 Miguel Ángel Cantero Víllora
 UCLM - Escuela Superior de Ingeniería Informática Albacete
 Sistemas Multiagentes 17/18
 */
@@ -11,6 +13,8 @@ Sistemas Multiagentes 17/18
 var contadorMensajes;
 var productos;
 var tiendasConocidas;
+var listaClientes;
+var listaTiendas;
 // Producto: {Nombre: , Cantidad: }
 // tiendasConocidas: {Direccion: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
@@ -18,7 +22,9 @@ function main() {
 	var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
 	contadorMensajes = 0
 	productos = [];
-	tiendasConocidas = [];
+    tiendasConocidas = [];
+    listaClientes = [];
+	listaTiendas = [];
 	var ipCliente
 	// Funcion jQuery que obtiene la ip de la maquina
 	$.ajax({
@@ -365,6 +371,89 @@ function parser_TC3(xml){
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 	
+}
+
+function parser_TC5(xml)
+{
+	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].innerHTML;
+	if (contadorMensajesR == (contadorMensajes+1))
+	{
+		contadorMensajes++;
+	}
+	else
+	{
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
+	}
+
+	var clientes = [];
+	// De la lista de clientes 'listaC' obtengo todos los elementos con etiqueta 'cliente'
+	var nodoListaC = xml.getElementsByTagName("listaC")[0].getElementsByTagName("cliente");
+	// Por cada nodo 'cliente' de la lista, obtengo el identificador y lo añado a la lista 'clientes'
+	for (var i = 0; i < nodoListaC.length; i++)
+	{
+		clientes.push(nodoListaC[i].getElementsByTagName("identificador")[0].innerHTML);
+	}
+	// Sustituyo el contenido de 'listaClientes' por el de 'clientes'
+	listaClientes = clientes;
+	console.log(listaClientes);
+
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
+}
+
+function parser_TC7(xml)
+{
+	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
+	if (contadorMensajesR == (contadorMensajes+1))
+		contadorMensajes++;
+	else
+	{
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
+	}
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
+}
+
+function parser_CC2(xml)
+{
+	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].innerHTML;
+	if (contadorMensajesR == (contadorMensajes+1))
+	{
+		contadorMensajes++;
+	}
+	else
+	{
+		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
+		return 1;
+	}
+
+	var tiendas = [];
+	// De la lista de clientes 'listaTiendas' obtengo todos los elementos con etiqueta 'tienda'
+	var nodoListaT = xml.getElementsByTagName("listaTiendas")[0].getElementsByTagName("tienda");
+	// Por cada nodo 'tienda' de la lista, obtengo sus datos y lo guardo en la lista 'tiendas'
+	for (var i = 0; i < nodoListaT.length; i++)
+	{
+		var id = nodoListaT[i].getElementsByTagName("id")[0].innerHTML;
+		var ip = nodoListaT[i].getElementsByTagName("ip")[0].innerHTML;
+		var tipo = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
+		var nodoListaC = nodoListaT[i].getElementsByTagName("listaCompras")[0].getElementsByTagName("producto");
+		var articulos = [];
+		// Obtengo la lista de productos en 'listaCompras'
+		for (var i = 0; i < nodoListaC.length; i++)
+		{
+			var nom = nodoListaC[i].getElementsByTagName("nombre")[0].innerHTML;
+			var cant = nodoListaC[i].getElementsByTagName("cantidad")[0].innerHTML;
+			var art = {nombre: nom, cantidad: cant}
+			articulos.push(art);
+		}
+		tiendas.push({id:id,ip:ip,tipo:tipo,listaCompra:articulos});
+	}
+	// Sustituyo el contenido de 'listaTiendas' por el de 'tiendas'
+	listaTiendas = tiendas;
+	// Codigo de acierto 0: todo se ha parseado correctamente.
+	return 0;
 }
 
 main()
