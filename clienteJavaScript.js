@@ -269,23 +269,35 @@ function Create_CC1(contadorMensajes, idCliente, urlTienda, ipCliente){
 }
 
 function parser_MC2(xml){
-	contadorMensajes = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
+	
+	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
+	if (contadorMensajesR == (contadorMensajes+1)){
+		contadorMensajes++;
+	}else{
+		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
+		return 0;
+	}
+	
+	// Obtenemos las tiendas que el monitor nos pasa, para ello localizamos la etiqueta "tienda"
 	tiendas = xml.getElementsByTagName("tienda");
 	var tienda;
+	// Recorremos las veces que aparezca la etiqueta "tienda" en el XML, para así ir añadiendolo al Array de tiendasConocidas.
 	for (var i=0; i < tiendas.length; i++){
 		tienda = {Id: tiendas[i].getElementsByTagName("id")[0].childNodes[0].nodeValue, Direccion: tiendas[i].getElementsByTagName("ip")[0].childNodes[0].nodeValue, Tipo: tiendas[i].getElementsByTagName("tipo")[0].childNodes[0].nodeValue, Visitado: 0};
 		tiendasConocidas.push(tienda);
 	}
 	
+	// Obtenemos los productos a comprar que el monitor nos indica, para ello localizamos la etiqueta "producto"
 	compras = xml.getElementsByTagName("producto");
 	var compra;
+	// Recorremos las veces que aparezca la etiqueta "producto" en el XML, para así ir añadiendolo al Array de productos.
 	for (var i=0; i < compras.length; i++){
 		compra = {Nombre: compras[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: compras[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue};
 		productos.push(compra);
 	}
 	
-	console.log(productos)
-	console.log(tiendasConocidas)
+	// Codigo de acierto 1: todo se ha parseado correctamente.
+	return 1;
 }
 
 main()
