@@ -1,7 +1,7 @@
 /*
 Cliente JavaScript
-Rev: 0.2
-Fecha: 23/11/2017
+Rev: 0.3
+Fecha: 29/11/2017
 Autores: Alejandro Moya Moya
 		 Jorge Valero Molina
 UCLM - Escuela Superior de Ingeniería Informática Albacete
@@ -21,15 +21,26 @@ function main() {
 	tiendasConocidas = [];
 	var ipCliente
 	// Funcion jQuery que obtiene la ip de la maquina
-	$.get("http://ipinfo.io", function(response) {
-		ipCliente = response.ip;
-		
-		console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar");
-	
-		// Mensaje de inicio, Cliente --> Monitor
-		sender(urlMonitor, Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
+	$.ajax({
+		url: 'https://ipinfo.io/',
+		async: false,
+		dataType: 'json',
+		contentType: 'application/j-son;charset=UTF-8',
+		success: function (data) {
+			ipCliente = data.ip
+		}
+	});
 
-	}, "jsonp");
+	
+	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar");
+	// Mensaje de inicio, Cliente --> Monitor
+	//sender(urlMonitor, Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
+/*
+	var pepe = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><root><CM1><identificador>456</identificador><emisor>0</emisor><receptor>clanjhoo.com:1880</receptor><time><timestamp>1511871329825</timestamp><creador>161.67.174.38</creador></time><listaTiendas><tienda><id>1</id><ip>777</ip><tipo>4</tipo></tienda><tienda><id>2</id><ip>888</ip><tipo>6</tipo></tienda></listaTiendas><listaCompras><producto><nombre>patata</nombre><cantidad>3</cantidad></producto><producto><nombre>pafsd</nombre><cantidad>6</cantidad></producto></listaCompras></CM1><TC2/></root>'
+	var parser = new DOMParser();
+	var response_xml = parser.parseFromString(pepe,"text/xml");
+	parser_MC2(response_xml);
+	*/
 }
 
 
@@ -257,5 +268,24 @@ function Create_CC1(contadorMensajes, idCliente, urlTienda, ipCliente){
 	return xml;
 }
 
+function parser_MC2(xml){
+	contadorMensajes = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
+	tiendas = xml.getElementsByTagName("tienda");
+	var tienda;
+	for (var i=0; i < tiendas.length; i++){
+		tienda = {Id: tiendas[i].getElementsByTagName("id")[0].childNodes[0].nodeValue, Direccion: tiendas[i].getElementsByTagName("ip")[0].childNodes[0].nodeValue, Tipo: tiendas[i].getElementsByTagName("tipo")[0].childNodes[0].nodeValue, Visitado: 0};
+		tiendasConocidas.push(tienda);
+	}
+	
+	compras = xml.getElementsByTagName("producto");
+	var compra;
+	for (var i=0; i < compras.length; i++){
+		compra = {Nombre: compras[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: compras[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue};
+		productos.push(compra);
+	}
+	
+	console.log(productos)
+	console.log(tiendasConocidas)
+}
 
 main()
