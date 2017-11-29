@@ -268,6 +268,8 @@ function Create_CC1(contadorMensajes, idCliente, urlTienda, ipCliente){
 	return xml;
 }
 
+// Este mensaje se recibirá cuando enviemos el mensaje CM1 (mensaje de inicialización)
+// Este mensaje es una respuesta del monitor y con este mensaje se obtendrán las tiendas que conocemos y los productos que tenemos que comprar.
 function parser_MC2(xml){
 	
 	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
@@ -298,6 +300,66 @@ function parser_MC2(xml){
 	
 	// Codigo de acierto 1: todo se ha parseado correctamente.
 	return 1;
+}
+// Este mensaje se recibirá cuando enviemos el mensaje CM3 (mensaje de finalización)
+// Este mensaje es una respuesta del monitor.
+function parser_MC4(xml){
+
+	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
+	if (contadorMensajesR == (contadorMensajes+1)){
+		contadorMensajes++;
+	}else{
+		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
+		return 0;
+	}
+	// Codigo de acierto 1: todo se ha parseado correctamente.
+	return 1;
+}
+// Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
+// Este mensaje es una respuesta de la tienda para decirnos que no puede atendernos, esta llena.
+function parser_TC2(xml){
+	var contadorMensajesR = xml.getElementsByTagName("idMensaje")[0].childNodes[0].nodeValue;
+	if (contadorMensajesR == (contadorMensajes+1)){
+		contadorMensajes++;
+	}else{
+		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
+		return 0;
+	}
+	// Codigo de acierto 1: todo se ha parseado correctamente.
+	return 1;
+}
+// Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
+// Este mensaje es una respuesta de la tienda para decirnos que hemos comprado X productos.
+function parser_TC3(xml){
+	
+	var contadorMensajesR = xml.getElementsByTagName("idMensaje")[0].childNodes[0].nodeValue;
+	if (contadorMensajesR == (contadorMensajes+1)){
+		contadorMensajes++;
+	}else{
+		// Codigo de error 0: el contador de mensajes no coincide con la respuesta.
+		return 0;
+	}
+	
+	// Obtenemos las productos que hemos comprado, para ello localizamos la etiqueta "producto"
+	productosComprados = xml.getElementsByTagName("producto");
+	var producto;
+	// Recorremos las veces que aparezca la etiqueta "producto" en el XML, para así ir descontando los productos que necesitamos.
+	for (var i=0; i < productos.length; i++){
+		producto = {Nombre: productosComprados[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: productosComprados[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue};
+		//Obtenemos la posicion donde se encontraria el producto que hemos comprado en nuestra lista de compra
+		var posicion = productos.indexOf(producto);
+		//Procedemos a restar la cantidad comprada a la que necesitabamos.
+		productos[posicion].Cantidad=productos[posicion].Cantidad-producto.Cantidad;
+		// Si ya hemos comprado todo lo que necesitabamos, lo borramos de nuestro array
+		if (productos[posicion].Cantidad == 0) {
+			//Borramos esa posicion y recolocamos el vector
+			productos.splice(posicion,1);
+		}
+	}
+	
+	// Codigo de acierto 1: todo se ha parseado correctamente.
+	return 1;
+	
 }
 
 main()
