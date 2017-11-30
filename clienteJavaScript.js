@@ -19,7 +19,9 @@ var listaTiendas;
 // tiendasConocidas: {Direccion: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
 	var idCliente = 0;
-	var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
+	// var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
+	var urlMonitor = $("#MonitorInput").val();
+	console.log("... El monitor se encuentra en la direccion " + urlMonitor);
 	contadorMensajes = 0
 	productos = [];
     tiendasConocidas = [];
@@ -456,4 +458,3 @@ function parser_CC2(xml)
 	return 0;
 }
 
-main()
