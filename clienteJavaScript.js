@@ -40,7 +40,19 @@ function main() {
 	// Mensaje de inicio, Cliente --> Monitor
 	var estado = sender(urlMonitor, Create_CM1(idCliente, urlMonitor, ipCliente), urlMonitor);
 	var estoyEnTienda = -1;
-
+	
+	// DEBUG: Si falta el monitor descomentar lo siguiente 
+	/*
+	idCliente = 123
+	productos.push({Nombre: "P1", Catidad:10})
+	productos.push({Nombre: "P2", Catidad:20})
+	console.log(productos)
+	tiendasConocidas.push({Id:"T1", Direccion:urlMonitor , Tipo:"TT1" , Visitado: 0})
+	tiendasConocidas.push({Id:"T2", Direccion:urlMonitor , Tipo:"TT2" , Visitado: 1})
+	console.log(tiendasConocidas)
+	*/
+	
+	
 	while(productos.length!= 0){
 		estoyEnTienda = 0;
 		while(estoyEnTienda == -1){
@@ -65,15 +77,6 @@ function main() {
 	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
 	console.log("Cliente ha terminado satisfactoriamente: gracias por jugar");
 	return 0;
-	
-	
-
-/*
-	var pepe = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><root><CM1><identificador>456</identificador><emisor>0</emisor><receptor>clanjhoo.com:1880</receptor><time><timestamp>1511871329825</timestamp><creador>161.67.174.38</creador></time><listaTiendas><tienda><id>1</id><ip>777</ip><tipo>4</tipo></tienda><tienda><id>2</id><ip>888</ip><tipo>6</tipo></tienda></listaTiendas><listaCompras><producto><nombre>patata</nombre><cantidad>3</cantidad></producto><producto><nombre>pafsd</nombre><cantidad>6</cantidad></producto></listaCompras></CM1><TC2/></root>'
-	var parser = new DOMParser();
-	var response_xml = parser.parseFromString(pepe,"text/xml");
-	parser_MC2(response_xml);
-	*/
 }
 
 
@@ -173,7 +176,7 @@ function sender(direccion, mensaje, dirMonitor) {
 // Mensajes Cliente -> Monitor
 // Mensaje de inicio
 function Create_CM1(idCliente, urlMonitor, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
+	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CM1>\
 <emisor>' + idCliente + '</emisor>\
 <receptor>' + urlMonitor + '</receptor>\
@@ -187,7 +190,7 @@ function Create_CM1(idCliente, urlMonitor, ipCliente){
 
 // Mensaje de fin
 function Create_CM3(idCliente, urlMonitor, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
+	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CM3>\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
 <receptor>' + urlMonitor + '</receptor> <!-- IP del monitor -->\
@@ -203,20 +206,20 @@ function Create_CM3(idCliente, urlMonitor, ipCliente){
 // Mensajes Cliente -> Tienda
 // Mensaje de inicio
 function Create_CT1(idCliente, urlTienda, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
+	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT1>\
-<emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
-<receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
+<emisor>' + idCliente + '</emisor>\
+<receptor>' + urlTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
-<creador>' + ipCliente + '</creador> <!-- IP del cliente -->\
+<creador>' + ipCliente + '</creador>\
 </time>\
 <listaP>';
 	var i;
 	for (i=0; i< productos.length; i++){
 		xml = xml + '<producto>\
 <nombre>' + productos[i].Nombre + '</nombre>\
-<cantidad>' + produtos[i].Cantidad + '</cantidad>\
+<cantidad>' + productos[i].Cantidad + '</cantidad>\
 </producto>';
 	}
 	
@@ -238,49 +241,51 @@ function Create_CT1(idCliente, urlTienda, ipCliente){
 }
 
 function Create_CT4(idCliente, urlTienda, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
-<mensajeCT4>\
-<emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
-<receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
+	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+<CT4>\
+<emisor>' + idCliente + '</emisor>\
+<receptor>' + urlTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
-<generador>' + ipCliente + '</generador> <!-- IP del cliente -->\
+<creador>' + ipCliente + '</creador>\
 </time>\
-</mensajeCT4>';
+</CT4>';
 
 	return xml.replace('\t','').replace('\n','');
 }
 
 
 function Create_CT6(idCliente, urlTienda, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
-<mensajeCT6>\
-<emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
-<receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
+	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+<CT6>\
+<emisor>' + idCliente + '</emisor>\
+<receptor>' + urlTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
-<generador>' + ipCliente + '</generador> <!-- IP del cliente -->\
+<creador>' + ipCliente + '</creador>\
 </time>\
-</mensajeCT6>';
+</CT6>';
 
 	return xml.replace('\t','').replace('\n','');
 }
 
+/* Este mensaje ya no se encuentra en la especificacion, se deberia de borrar ya
 // Mensajes Cliente -> Cliente (Es Tienda!!!)
 // Un cliente le pide a otro (una tienda!!!!) que le de el listado de tiendas
 function Create_CC1(idCliente, urlTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <CC1>\
-<emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
-<receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
+<emisor>' + idCliente + '</emisor>\
+<receptor>' + urlTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
-<generador>' + ipCliente + '</generador> <!-- IP del cliente -->\
+<generador>' + ipCliente + '</generador>\
 </time>\
 </CC1>';
 
 	return xml.replace('\t','').replace('\n','');
 }
+*/
 
 // Este mensaje se recibirá cuando enviemos el mensaje CM1 (mensaje de inicialización)
 // Este mensaje es una respuesta del monitor y con este mensaje se obtendrán las tiendas que conocemos y los productos que tenemos que comprar.
