@@ -135,7 +135,9 @@ function sender(direccion, mensaje, dirMonitor) {
 					},
 
 					error: function(response) {
-						console.log("Error mensaje Monitor:" + response);
+						console.log("Fallo envio monitor!")
+						console.log("Error " + response.status + ": " + response.statusText);
+						console.log(response.responseText);
 						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
 						//return estado;
 					}
@@ -178,7 +180,8 @@ function sender(direccion, mensaje, dirMonitor) {
 		},
 
 		error: function(response) {
-			console.log(response);
+			console.log("Error " + response.status + ": " + response.statusText);
+			console.log(response.responseText);
 			estado=1; //Código de error 1: no ha llegado al destinatario
 		}
 	});
