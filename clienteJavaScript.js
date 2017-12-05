@@ -1,7 +1,7 @@
 /*
 Cliente JavaScript
-Rev: 0.4
-Fecha: 29/11/2017
+Rev: 0.5
+Fecha: 05/12/2017
 Autores: Alejandro Moya Moya
 		 Jorge Valero Molina
 		 Francisco Martinez Esteso
@@ -10,18 +10,16 @@ UCLM - Escuela Superior de Ingeniería Informática Albacete
 Sistemas Multiagentes 17/18
 */
 
-var contadorMensajes;
 var productos;
 var tiendasConocidas;
 var listaTiendas;
 // Producto: {Nombre: , Cantidad: }
-// tiendasConocidas: {Direccion: , Visitado: (0 no visitada, 1 visitada)}
+// tiendasConocidas: {Id: , Direccion: , Tipo: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
 	var idCliente = 0;
 	//var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
 	var urlMonitor = $("#MonitorInput").val();
 	console.log("... El monitor se encuentra en la direccion " + urlMonitor);
-	contadorMensajes = 0
 	productos = [];
     tiendasConocidas = [];
 	listaTiendas = [];
@@ -38,9 +36,9 @@ function main() {
 	});
 
 	
-	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar");
+	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
 	// Mensaje de inicio, Cliente --> Monitor
-	var estado = sender(urlMonitor, Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
+	var estado = sender(urlMonitor, Create_CM1(idCliente, urlMonitor, ipCliente), urlMonitor);
 	var estoyEnTienda = -1;
 
 	while(productos.length!= 0){
@@ -48,7 +46,7 @@ function main() {
 		while(estoyEnTienda == -1){
 			for (i = 0; i< tiendasConocidas.length(); i++){
 				if (tiendasConocidas[i].Visitado == 0){
-					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(contadorMensajes, idCliente, tiendasConocidas[i].Direccion, ipCliente), urlMonitor);
+					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(idCliente, tiendasConocidas[i].Direccion, ipCliente), urlMonitor);
 					if (estado==101){
 						tiendasConocidas[i].Visitado = 1;
 						estoyEnTienda=i;
@@ -58,12 +56,13 @@ function main() {
 			}		
 		}
 		
-		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(contadorMensajes, idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
+		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
 		
 		
 	}
 	
-	var estado = sender(urlMonitor, Create_CM3(contadorMensajes, idCliente, urlMonitor, ipCliente), urlMonitor);
+	console.log("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)")
+	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
 	console.log("Cliente ha terminado satisfactoriamente: gracias por jugar");
 	return 0;
 	
@@ -84,9 +83,8 @@ function main() {
 function sender(direccion, mensaje, dirMonitor) {
 	// Mensaje enviado a la direccion deseada
 	var estado=-1;
-	console.log(direccion)
 	$.ajax({
-		url: 'http://' + direccion.replace("http://", "").replace(/\/\//g,"/"),             
+		url: 'http://' + direccion.replace("http://", "").replace(/\/\//g,"/"),
 		data: mensaje,
 		type: "POST",
 		async: false,
@@ -99,81 +97,66 @@ function sender(direccion, mensaje, dirMonitor) {
 
 		success: function(response) {
 			console.log("Mensaje recibido: " + response);
-			contadorMensajes++;
 			estado=0; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
-			// Mensaje replica para el monitor
+			// Solo se replicara si el destinatario del mensaje no era el monitor
 			if (direccion !== dirMonitor){
 				$.ajax({
-					url: dirMonitor,                   
+					url: 'http://' + dirMonitor.replace("http://", "").replace(/\/\//g,"/"),                   
+					data: mensaje,
 					type: "POST",
 					async: false,
-					data: mensaje,                                                      
-					contentType: "text/xml",
+					dataType: 'text',
+					contentType: 'text/xml',
 
 					beforeSend: function(request) {
-						console.log("Mandando mensaje a Monitor: " + dirMonitor);
+						console.log("Mandando mensaje replica a Monitor: " + dirMonitor);
 					},
 
 					success: function(response) {
 						console.log("Monitor: " + response);
-						var parser = new DOMParser();
-						var response_xml = parser.parseFromString(response,"text/xml");
-						var raiz = response_xml.documentElement.tagName
-						if (raiz == "MC2"){
-							parser_MC2(response_xml);
-						}
-						else if (raiz == "MC4"){
-							parser_MC4(response_xml);
-						}
-						else if (raiz == "TC2"){
-							parser_TC2(response_xml);
-							return 100; // Codigo de acierto 100: tienda ocupada 
-						}
-						else if (raiz == "TC3"){
-							parser_TC3(response_xml);
-							return 101; // Codigo de acierto 101: tienda no ocupada, has comprado 
-						}
-						else if (raiz == "TC5"){
-							parser_TC5(response_xml);
-						}
-						else if (raiz == "TC7"){
-							parser_TC7(response_xml);
-						}
-						else if (raiz == "CC2"){
-							parser_CC2(response_xml);
-						}
-						else {
-							console.log("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz);
-							console.log("Mensaje: " + response);
-							console.log("Mensaje parseado: " + response_xml);
-						}
-						//El estado sigue a cero, por lo tanto todo va bien
-						
 					},
 
 					error: function(response) {
-						console.log("Monitor:" + response);
+						console.log("Error Monitor:" + response);
 						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
+						return estado;
 					}
 				});
 			}
-			else {
-				var parser = new DOMParser();
-				var response_xml = parser.parseFromString(response,"text/xml");
-				var raiz = response_xml.documentElement.tagName;
-				if (raiz == "MC2"){
-					parser_MC2(response_xml);
-				}
-				else if (raiz == "MC4"){
-					parser_MC4(response_xml);
-				}
-				else {
-					console.log("ERROR: mensaje desconocido --" + " Raiz Obtenida: " + raiz);
-					console.log("Mensaje: " + response);
-					console.log("Mensaje parseado: " + response_xml);
-				}
+			
+			var parser = new DOMParser();
+			var response_xml = parser.parseFromString(response,"text/xml");
+			var raiz = response_xml.documentElement.tagName
+			if (raiz == "MC2"){
+				parser_MC2(response_xml);
 			}
+			else if (raiz == "MC4"){
+				parser_MC4(response_xml);
+			}
+			else if (raiz == "TC2"){
+				parser_TC2(response_xml);
+				return 100; // Codigo de acierto 100: tienda ocupada 
+			}
+			else if (raiz == "TC3"){
+				parser_TC3(response_xml);
+				return 101; // Codigo de acierto 101: tienda no ocupada, has comprado 
+			}
+			else if (raiz == "TC5"){
+				parser_TC5(response_xml);
+			}
+			else if (raiz == "TC7"){
+				parser_TC7(response_xml);
+			}
+			else if (raiz == "CC2"){
+				parser_CC2(response_xml);
+			}
+			else {
+				console.log("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz);
+				console.log("Mensaje: " + response);
+				console.log("Mensaje parseado: " + response_xml);
+			}
+			//El estado sigue a cero, por lo tanto todo va bien
 			
 		},
 
@@ -189,7 +172,7 @@ function sender(direccion, mensaje, dirMonitor) {
 // Funciones de creacion de mensajes XML
 // Mensajes Cliente -> Monitor
 // Mensaje de inicio
-function Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente){
+function Create_CM1(idCliente, urlMonitor, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <CM1>\
 <emisor>' + idCliente + '</emisor>\
@@ -203,7 +186,7 @@ function Create_CM1(contadorMensajes, idCliente, urlMonitor, ipCliente){
 }
 
 // Mensaje de fin
-function Create_CM3(contadorMensajes, idCliente, urlMonitor, ipCliente){
+function Create_CM3(idCliente, urlMonitor, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <CM3>\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
@@ -213,13 +196,13 @@ function Create_CM3(contadorMensajes, idCliente, urlMonitor, ipCliente){
 <creador>' + ipCliente + '</creador> <!-- IP del cliente -->\
 </time>\
 </CM3>';
-	return xml;
+	return xml.replace('\t','').replace('\n','');
 }
 
 
 // Mensajes Cliente -> Tienda
 // Mensaje de inicio
-function Create_CT1(contadorMensajes, idCliente, urlTienda, ipCliente){
+function Create_CT1(idCliente, urlTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <CT1>\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
@@ -232,18 +215,29 @@ function Create_CT1(contadorMensajes, idCliente, urlTienda, ipCliente){
 	var i;
 	for (i=0; i< productos.length; i++){
 		xml = xml + '<producto>\
-<nombre>' + productos[i].nombre + '</nombre>\
-<cantidad>' + produtos[i].cantidad + '</cantidad>\
+<nombre>' + productos[i].Nombre + '</nombre>\
+<cantidad>' + produtos[i].Cantidad + '</cantidad>\
 </producto>';
 	}
 	
 	xml = xml + '</listaP>\
+<listaT>';
+	var i;
+	for (i=0; i< tiendasConocidas.length; i++){
+		xml = xml + '<tienda>\
+<idTienda>' + tiendasConocidas[i].Id + '</idTienda>\
+<direccion>' + tiendasConocidas[i].Direccion + '</direccion>\
+<tipo>' + tiendasConocidas[i].Tipo + '</tipo>\
+</tienda>';
+	}
+	
+	xml = xml + '</listaT>\
 </CT1>';
 
-	return xml;
+	return xml.replace('\t','').replace('\n','');
 }
 
-function Create_CT4(contadorMensajes, idCliente, urlTienda, ipCliente){
+function Create_CT4(idCliente, urlTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <mensajeCT4>\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
@@ -254,14 +248,13 @@ function Create_CT4(contadorMensajes, idCliente, urlTienda, ipCliente){
 </time>\
 </mensajeCT4>';
 
-	return xml;
+	return xml.replace('\t','').replace('\n','');
 }
 
 
-function Create_CT6(contadorMensajes, idCliente, urlTienda, ipCliente){
+function Create_CT6(idCliente, urlTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <mensajeCT6>\
-<identificador>' + contadorMensajes + '</identificador> <!-- Identificador del mensaje-->\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
 <receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
 <time>\
@@ -270,15 +263,14 @@ function Create_CT6(contadorMensajes, idCliente, urlTienda, ipCliente){
 </time>\
 </mensajeCT6>';
 
-	return xml;
+	return xml.replace('\t','').replace('\n','');
 }
 
 // Mensajes Cliente -> Cliente (Es Tienda!!!)
 // Un cliente le pide a otro (una tienda!!!!) que le de el listado de tiendas
-function Create_CC1(contadorMensajes, idCliente, urlTienda, ipCliente){
+function Create_CC1(idCliente, urlTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8"?>\
 <CC1>\
-<identificador>' + contadorMensajes + '</identificador> <!-- Identificador del mensaje-->\
 <emisor>' + idCliente + '</emisor> <!-- Codigo 0 no hay emisor -->\
 <receptor>' + urlTienda + '</receptor> <!-- IP del monitor -->\
 <time>\
@@ -287,21 +279,12 @@ function Create_CC1(contadorMensajes, idCliente, urlTienda, ipCliente){
 </time>\
 </CC1>';
 
-	return xml;
+	return xml.replace('\t','').replace('\n','');
 }
 
 // Este mensaje se recibirá cuando enviemos el mensaje CM1 (mensaje de inicialización)
 // Este mensaje es una respuesta del monitor y con este mensaje se obtendrán las tiendas que conocemos y los productos que tenemos que comprar.
 function parser_MC2(xml){
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
 	// Obtenemos las tiendas que el monitor nos pasa, para ello localizamos la etiqueta "tienda"
 	tiendas = xml.getElementsByTagName("tienda");
 	var tienda;
@@ -326,31 +309,14 @@ function parser_MC2(xml){
 // Este mensaje se recibirá cuando enviemos el mensaje CM3 (mensaje de finalización)
 // Este mensaje es una respuesta del monitor.
 function parser_MC4(xml){
-
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
+	
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }
 // Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
 // Este mensaje es una respuesta de la tienda para decirnos que no puede atendernos, esta llena.
 function parser_TC2(xml){
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
+
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }
@@ -358,16 +324,6 @@ function parser_TC2(xml){
 // Este mensaje se recibirá cuando enviemos el mensaje CT1 (mensaje de quiero entrar y estos son los productos que quiero)
 // Este mensaje es una respuesta de la tienda para decirnos que hemos comprado X productos.
 function parser_TC3(xml){
-	
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
 	
 	// Obtenemos las productos que hemos comprado, para ello localizamos la etiqueta "producto"
 	productosComprados = xml.getElementsByTagName("producto");
@@ -395,15 +351,6 @@ function parser_TC3(xml){
 // Este mensaje es una respuesta de la tienda.
 function parser_TC5(xml)
 {
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
 
 	var tiendas = [];
 	// De la lista de clientes 'listaC' obtengo todos los elementos con etiqueta 'cliente'
@@ -428,31 +375,16 @@ function parser_TC5(xml)
 // Confirmación de FIN (compra realizada y terminada)
 function parser_TC7(xml)
 {
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
+
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }
 
+/* ACTUALMENTE EL CLIENTE NO PUEDE RECIBIR MENSAJES DE OTROS CLIENTES!!!!
 // Respuesta de CC1 (Dame lista de tiendas conocidas)
 function parser_CC2(xml)
 {
-	/*
-	var contadorMensajesR = xml.getElementsByTagName("identificador")[0].childNodes[0].nodeValue;
-	if (contadorMensajesR == (contadorMensajes+1)){
-		contadorMensajes++;
-	}else{
-		// Codigo de error 1: el contador de mensajes no coincide con la respuesta.
-		return 1;
-	}
-	*/
+
 
 	var tiendas = [];
 	// De la lista de clientes 'listaTiendas' obtengo todos los elementos con etiqueta 'tienda'
@@ -480,3 +412,4 @@ function parser_CC2(xml)
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }
+*/
