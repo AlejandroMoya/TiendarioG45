@@ -13,12 +13,13 @@ Sistemas Multiagentes 17/18
 var productos;
 var tiendasConocidas;
 var listaTiendas;
+var idCliente;
 // Producto: {Nombre: , Cantidad: }
 // tiendasConocidas: {Id: , Direccion: , Tipo: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
-	var idCliente = 0;
-	//var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
-	var urlMonitor = $("#MonitorInput").val();
+	idCliente = 0;
+	var urlMonitor = 'clanjhoo.com:1880'; // OJO:Cambiar por la IP del monitor
+	//var urlMonitor = $("#MonitorInput").val();
 	console.log("... El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
     tiendasConocidas = [];
@@ -42,36 +43,47 @@ function main() {
 	var estoyEnTienda = -1;
 	
 	// DEBUG: Si falta el monitor descomentar lo siguiente 
-	/*
+	
 	idCliente = 123
-	productos.push({Nombre: "P1", Catidad:10})
-	productos.push({Nombre: "P2", Catidad:20})
+	productos.push({Nombre: "P1", Cantidad:10})
+	productos.push({Nombre: "P2", Cantidad:20})
+	tiendasConocidas.push({Id:"T1", Direccion:urlMonitor , Tipo:"php" , Visitado: 0})
+	tiendasConocidas.push({Id:"T2", Direccion:"172.19.158.78:5000/sendXML" , Tipo:"py" , Visitado: 1})
 	console.log(productos)
-	tiendasConocidas.push({Id:"T1", Direccion:urlMonitor , Tipo:"TT1" , Visitado: 0})
-	tiendasConocidas.push({Id:"T2", Direccion:urlMonitor , Tipo:"TT2" , Visitado: 1})
 	console.log(tiendasConocidas)
-	*/
 	
-	
+	var i;
 	while(productos.length!= 0){
-		estoyEnTienda = 0;
+		estoyEnTienda = -1;
+		console.log("Tienes que comprar los siguiente productos")
+		console.log(productos)
 		while(estoyEnTienda == -1){
-			for (i = 0; i< tiendasConocidas.length(); i++){
+			for (i = 0; i< tiendasConocidas.length; i++){
 				if (tiendasConocidas[i].Visitado == 0){
 					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(idCliente, tiendasConocidas[i].Direccion, ipCliente), urlMonitor);
 					if (estado==101){
+						console.log("Has entrado en la tienda " + tiendasConocidas[i].Direccion)
 						tiendasConocidas[i].Visitado = 1;
 						estoyEnTienda=i;
 						break;
+					} else if (estado == 100){
+						console.log("La tienda " + tiendasConocidas[i].Direccion + " esta ocupada, intentalo mas tarde");
 					}
 				}
 			}		
 		}
 		
-		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
+		console.log("Tienes que comprar los siguientes productos: ")
+		console.log(productos)
+		// Si quedan productos por comprar, preguntar por nuevas tiendas
+		if (productos.length != 0){
+			estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
+		}
 		
+		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT6(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
 		
 	}
+	
 	
 	console.log("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)")
 	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
@@ -96,10 +108,11 @@ function sender(direccion, mensaje, dirMonitor) {
 
 		beforeSend: function(request) {
 			console.log("Mandando mensaje a: " + direccion);
+			console.log("Mensaje enviado: " + mensaje)
 		},
 
 		success: function(response) {
-			console.log("Mensaje recibido: " + response);
+			console.log("Mensaje recibido de " + direccion + ": " + response);
 			estado=0; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
 			// Solo se replicara si el destinatario del mensaje no era el monitor
@@ -114,16 +127,17 @@ function sender(direccion, mensaje, dirMonitor) {
 
 					beforeSend: function(request) {
 						console.log("Mandando mensaje replica a Monitor: " + dirMonitor);
+						console.log("Mensaje replicado enviado: " + mensaje)
 					},
 
 					success: function(response) {
-						console.log("Monitor: " + response);
+						console.log("Exito mensaje Monitor: " + response);
 					},
 
 					error: function(response) {
-						console.log("Error Monitor:" + response);
+						console.log("Error mensaje Monitor:" + response);
 						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
-						return estado;
+						//return estado;
 					}
 				});
 			}
@@ -139,11 +153,11 @@ function sender(direccion, mensaje, dirMonitor) {
 			}
 			else if (raiz == "TC2"){
 				parser_TC2(response_xml);
-				return 100; // Codigo de acierto 100: tienda ocupada 
+				estado = 100; // Codigo de acierto 100: tienda ocupada 
 			}
 			else if (raiz == "TC3"){
 				parser_TC3(response_xml);
-				return 101; // Codigo de acierto 101: tienda no ocupada, has comprado 
+				estado = 101; // Codigo de acierto 101: tienda no ocupada, has comprado 
 			}
 			else if (raiz == "TC5"){
 				parser_TC5(response_xml);
@@ -290,11 +304,13 @@ function Create_CC1(idCliente, urlTienda, ipCliente){
 // Este mensaje se recibirá cuando enviemos el mensaje CM1 (mensaje de inicialización)
 // Este mensaje es una respuesta del monitor y con este mensaje se obtendrán las tiendas que conocemos y los productos que tenemos que comprar.
 function parser_MC2(xml){
+	// Obtenemos la ID asignada por el Monitor
+	idCliente = xml.getElementsByTagName("receptor")[0].childNodes[0].nodeValue;
 	// Obtenemos las tiendas que el monitor nos pasa, para ello localizamos la etiqueta "tienda"
 	tiendas = xml.getElementsByTagName("tienda");
 	var tienda;
 	// Recorremos las veces que aparezca la etiqueta "tienda" en el XML, para así ir añadiendolo al Array de tiendasConocidas.
-	for (var i=0; i < tiendas.length; i++){
+	for (var i=0; i <= tiendas.length; i++){
 		tienda = {Id: tiendas[i].getElementsByTagName("idTienda")[0].childNodes[0].nodeValue, Direccion: tiendas[i].getElementsByTagName("direccion")[0].childNodes[0].nodeValue, Tipo: tiendas[i].getElementsByTagName("tipo")[0].childNodes[0].nodeValue, Visitado: 0};
 		tiendasConocidas.push(tienda);
 	}
@@ -334,10 +350,17 @@ function parser_TC3(xml){
 	productosComprados = xml.getElementsByTagName("producto");
 	var producto;
 	// Recorremos las veces que aparezca la etiqueta "producto" en el XML, para así ir descontando los productos que necesitamos.
-	for (var i=0; i < productos.length; i++){
-		producto = {Nombre: productosComprados[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: productosComprados[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue};
+	for (var i=0; i <= productos.length; i++){
+		producto = {Nombre: productosComprados[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: parseInt(productosComprados[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue)};
 		//Obtenemos la posicion donde se encontraria el producto que hemos comprado en nuestra lista de compra
-		var posicion = productos.indexOf(producto);
+		//var posicion = productos.indexOf(producto); NO FUNCIONA
+		var posicion = -1;
+		for(var j=0; j< productos.length; j++){
+			if (productos[j].Nombre = producto.Nombre){
+				posicion = j;
+				break;
+			}
+		}
 		//Procedemos a restar la cantidad comprada a la que necesitabamos.
 		productos[posicion].Cantidad=productos[posicion].Cantidad-producto.Cantidad;
 		// Si ya hemos comprado todo lo que necesitabamos, lo borramos de nuestro array
@@ -361,7 +384,7 @@ function parser_TC5(xml)
 	// De la lista de clientes 'listaC' obtengo todos los elementos con etiqueta 'cliente'
 	var nodoListaT = xml.getElementsByTagName("listaT")[0].getElementsByTagName("tienda");
 	// Por cada nodo 'cliente' de la lista, obtengo el identificador y lo añado a la lista 'clientes'
-	for (var i = 0; i < nodoListaT.length; i++)
+	for (var i = 0; i <= nodoListaT.length; i++)
 	{
 		var nom = nodoListaT[i].getElementsByTagName("idTienta")[0].innerHTML;
 		var cant = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
@@ -418,3 +441,5 @@ function parser_CC2(xml)
 	return 0;
 }
 */
+
+main()
