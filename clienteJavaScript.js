@@ -12,7 +12,6 @@ Sistemas Multiagentes 17/18
 
 var productos;
 var tiendasConocidas;
-var listaTiendas;
 var idCliente;
 // Contador para insertar mensajes en el log
 var num = 0;
@@ -21,13 +20,13 @@ var num = 0;
 // tiendasConocidas: {Id: , Direccion: , Tipo: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
 	idCliente = 0;
-	var urlMonitor = '172.19.178.3:8080/monitor/Mensajes/recibir.php'; // OJO:Cambiar por la IP del monitor
+	var urlMonitor = '172.19.178.3:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
 	//var urlMonitor = $("#MonitorInput").val();
 	console.log("El monitor se encuentra en la direccion " + urlMonitor);
 	AddRow("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
     tiendasConocidas = [];
-	listaTiendas = [];
+
 	var ipCliente
 	// Funcion jQuery que obtiene la ip de la maquina
 	$.ajax({
@@ -47,7 +46,11 @@ function main() {
 	var estado = sender(urlMonitor, Create_CM1(idCliente, urlMonitor, ipCliente), urlMonitor);
 	var estoyEnTienda = -1;
 	
-	console.log("Has recibio lo siguiente del monitor: ");
+	if (estado != 200){
+		return 1;
+	}
+	
+	console.log("Has recibido lo siguiente del monitor: ");
 	console.log("IDCliente: " + idCliente);
 	console.log("Listado de la compra:")
 	console.log(productos)
@@ -71,8 +74,9 @@ function main() {
 	console.log(tiendasConocidas)
 	AddRow(tiendasConocidas);
 	*/
-	/*
+	
 	var i;
+	
 	while(productos.length!= 0){
 		estoyEnTienda = -1;
 		console.log("Tienes que comprar los siguiente productos")
@@ -82,7 +86,7 @@ function main() {
 		while(estoyEnTienda == -1){
 			for (i = 0; i< tiendasConocidas.length; i++){
 				if (tiendasConocidas[i].Visitado == 0){
-					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(idCliente, tiendasConocidas[i].Direccion, ipCliente), urlMonitor);
+					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(idCliente, tiendasConocidas[i].Id, ipCliente), urlMonitor);
 					if (estado==101){
 						console.log("Has entrado en la tienda " + tiendasConocidas[i].Direccion)
 						tiendasConocidas[i].Visitado = 1;
@@ -90,6 +94,11 @@ function main() {
 						break;
 					} else if (estado == 100){
 						console.log("La tienda " + tiendasConocidas[i].Direccion + " esta ocupada, intentalo mas tarde");
+					} else if (estado == 400){
+						console.log("ERROR 400, XML mal formado")
+					} else if (estado == 404){
+						tiendasConocidas.splice(i,1);
+						i--;
 					}
 				}
 			}		
@@ -100,12 +109,28 @@ function main() {
 		console.log(productos)
 		AddRow(productos);
 		// Si quedan productos por comprar, preguntar por nuevas tiendas
-		if (productos.length != 0){
-			estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
+		//if (productos.length != 0){
+		//	var j = 0;
+		//	while(quedanSinVisitar() == false){
+		//		console.log("Preguntando nuevas tiendas...");
+		//		AddRow("Preguntando nuevas tiendas...");
+				estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Id, ipCliente), urlMonitor);
+		//		if (j == 20){
+		//			console.log("ERROR: el sistema no ha sido capaz de proporcionar nuevas tiendas...");
+		//			AddRow("ERROR: el sistema no ha sido capaz de proporcionar nuevas tiendas...");
+		//			break;
+		//		}
+		//		j++;
+		//	}
+		//}
+		console.log("Saliendo de la tienda: " + tiendasConocidas[estoyEnTienda].Id)
+		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT6(idCliente, tiendasConocidas[estoyEnTienda].Id, ipCliente), urlMonitor);
+		//if (j == 20){
+		//	break;
+		//}
+		if (quedanSinVisitar() == false){
+			break;
 		}
-		
-		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT6(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
-		
 	}
 	
 	
@@ -113,11 +138,18 @@ function main() {
 	AddRow("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)");
 	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
 	console.log("Cliente ha terminado satisfactoriamente: gracias por jugar");
-	AddRow("Cliente ha terminado satisfactoriamente: gracias por jugar");*/
+	AddRow("Cliente ha terminado satisfactoriamente: gracias por jugar");
 	return 0;
 }
 
-
+function quedanSinVisitar(){
+	for(var i=0; i < tiendasConocidas.length; i++){
+		if (tiendasConocidas[i].Visitado == 0){
+				return true;
+			}
+	}
+	return false;
+}
 
 
 // Función que nos permite mandar un XML dada la URL de envio (direccion) y el mensaje (mensaje)
@@ -142,42 +174,9 @@ function sender(direccion, mensaje, dirMonitor) {
 		success: function(response) {
 			console.log("Mensaje recibido de " + direccion + ": " + response);
 			AddRow("Mensaje recibido de " + direccion + ": " + response);
-			estado=0; //Acierto, todo va bien
+			estado=200; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
 			// Solo se replicara si el destinatario del mensaje no era el monitor
-			if (direccion !== dirMonitor){
-				$.ajax({
-					url: 'http://' + dirMonitor.replace("http://", "").replace(/\/\//g,"/"),                   
-					data: mensaje,
-					type: "POST",
-					async: false,
-					dataType: 'text',
-					contentType: 'text/xml',
-
-					beforeSend: function(request) {
-						console.log("Mandando mensaje replica a Monitor: " + dirMonitor);
-						AddRow("Mandando mensaje replica a Monitor: " + dirMonitor);
-						console.log("Mensaje replicado enviado: " + mensaje);
-						AddRow("Mensaje replicado enviado: " + mensaje);
-					},
-
-					success: function(response) {
-						console.log("Exito mensaje Monitor: " + response);
-						AddRow("Exito mensaje Monitor: " + response);
-					},
-
-					error: function(response) {
-						console.log("Fallo envio monitor!")
-						AddRow("Fallo envio monitor!", "red");
-						console.log("Error " + response.status + ": " + response.statusText);
-						AddRow("Error " + response.status + ": " + response.statusText, "red");
-						console.log(response.responseText);
-						AddRow(response.responseText, "red");
-						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
-						//return estado;
-					}
-				});
-			}
 			
 			var parser = new DOMParser();
 			var response_xml = parser.parseFromString(response,"text/xml");
@@ -214,6 +213,13 @@ function sender(direccion, mensaje, dirMonitor) {
 				console.log("Mensaje parseado: " + response_xml);
 				AddRow("Mensaje parseado: " + response_xml);
 			}
+			if (direccion !== dirMonitor){
+				var estadoMonitor = -1;
+				while (estadoMonitor == -1){
+					estadoMonitor = replicador(dirMonitor,mensaje);
+				}
+
+			}
 			//El estado sigue a cero, por lo tanto todo va bien
 			
 		},
@@ -223,10 +229,48 @@ function sender(direccion, mensaje, dirMonitor) {
 			AddRow("Error " + response.status + ": " + response.statusText, "red");
 			console.log(response.responseText);
 			AddRow(response.responseText, "red");
-			estado=1; //Código de error 1: no ha llegado al destinatario
+			estado=response.status;
 		}
 	});
 	return estado;
+}
+
+function replicador(urlMonitor, mensaje){
+	var estado = -1;
+	$.ajax({
+		url: 'http://' + urlMonitor.replace("http://", "").replace(/\/\//g,"/"),                   
+		data: mensaje,
+		type: "POST",
+		async: false,
+		dataType: 'text',
+		contentType: 'text/xml',
+
+		beforeSend: function(request) {
+			console.log("Mandando mensaje replica a Monitor: " + urlMonitor);
+			AddRow("Mandando mensaje replica a Monitor: " + urlMonitor);
+			console.log("Mensaje replicado enviado: " + mensaje);
+			AddRow("Mensaje replicado enviado: " + mensaje);
+		},
+
+		success: function(response) {
+			console.log("Exito mensaje Monitor: " + response);
+			AddRow("Exito mensaje Monitor: " + response);
+			estado = 0;
+		},
+
+		error: function(response) {
+			console.log("Fallo envio monitor!")
+			AddRow("Fallo envio monitor!", "red");
+			console.log("Error " + response.status + ": " + response.statusText);
+			AddRow("Error " + response.status + ": " + response.statusText, "red");
+			console.log(response.responseText);
+			AddRow(response.responseText, "red");
+			estado=2; //Código de error 2: el mensaje no ha llegado al monitor
+			//return estado;
+		}
+	});
+	return estado;
+	
 }
 
 
@@ -263,11 +307,11 @@ function Create_CM3(idCliente, urlMonitor, ipCliente){
 
 // Mensajes Cliente -> Tienda
 // Mensaje de inicio
-function Create_CT1(idCliente, urlTienda, ipCliente){
+function Create_CT1(idCliente, idTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT1>\
 <emisor>' + idCliente + '</emisor>\
-<receptor>' + urlTienda + '</receptor>\
+<receptor>' + idTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
 <creador>' + ipCliente + '</creador>\
@@ -298,11 +342,11 @@ function Create_CT1(idCliente, urlTienda, ipCliente){
 	return xml.replace('\t','').replace('\n','');
 }
 
-function Create_CT4(idCliente, urlTienda, ipCliente){
+function Create_CT4(idCliente, idTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT4>\
 <emisor>' + idCliente + '</emisor>\
-<receptor>' + urlTienda + '</receptor>\
+<receptor>' + idTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
 <creador>' + ipCliente + '</creador>\
@@ -313,11 +357,11 @@ function Create_CT4(idCliente, urlTienda, ipCliente){
 }
 
 
-function Create_CT6(idCliente, urlTienda, ipCliente){
+function Create_CT6(idCliente, idTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT6>\
 <emisor>' + idCliente + '</emisor>\
-<receptor>' + urlTienda + '</receptor>\
+<receptor>' + idTienda + '</receptor>\
 <time>\
 <timestamp>' + Date.now() + '</timestamp>\
 <creador>' + ipCliente + '</creador>\
@@ -354,7 +398,7 @@ function parser_MC2(xml){
 	tiendas = xml.getElementsByTagName("tienda");
 	var tienda;
 	// Recorremos las veces que aparezca la etiqueta "tienda" en el XML, para así ir añadiendolo al Array de tiendasConocidas.
-	for (var i=0; i <= tiendas.length; i++){
+	for (var i=0; i < tiendas.length; i++){
 		tienda = {Id: tiendas[i].getElementsByTagName("idTienda")[0].childNodes[0].nodeValue, Direccion: tiendas[i].getElementsByTagName("direccion")[0].childNodes[0].nodeValue, Tipo: tiendas[i].getElementsByTagName("tipo")[0].childNodes[0].nodeValue, Visitado: 0};
 		tiendasConocidas.push(tienda);
 	}
@@ -391,10 +435,10 @@ function parser_TC2(xml){
 function parser_TC3(xml){
 	
 	// Obtenemos las productos que hemos comprado, para ello localizamos la etiqueta "producto"
-	productosComprados = xml.getElementsByTagName("producto");
+	var productosComprados = xml.getElementsByTagName("producto");
 	var producto;
 	// Recorremos las veces que aparezca la etiqueta "producto" en el XML, para así ir descontando los productos que necesitamos.
-	for (var i=0; i <= productos.length; i++){
+	for (var i=0; i < productosComprados.length; i++){
 		producto = {Nombre: productosComprados[i].getElementsByTagName("nombre")[0].childNodes[0].nodeValue, Cantidad: parseInt(productosComprados[i].getElementsByTagName("cantidad")[0].childNodes[0].nodeValue)};
 		//Obtenemos la posicion donde se encontraria el producto que hemos comprado en nuestra lista de compra
 		//var posicion = productos.indexOf(producto); NO FUNCIONA
@@ -428,7 +472,7 @@ function parser_TC5(xml)
 	// De la lista de clientes 'listaC' obtengo todos los elementos con etiqueta 'cliente'
 	var nodoListaT = xml.getElementsByTagName("listaT")[0].getElementsByTagName("tienda");
 	// Por cada nodo 'cliente' de la lista, obtengo el identificador y lo añado a la lista 'clientes'
-	for (var i = 0; i <= nodoListaT.length; i++)
+	for (var i = 0; i < nodoListaT.length; i++)
 	{
 		var nom = nodoListaT[i].getElementsByTagName("idTienta")[0].innerHTML;
 		var cant = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
@@ -436,8 +480,8 @@ function parser_TC5(xml)
 		var art = {nombre: nom, cantidad: cant}
 		tiendas.push(art);
 	}
-	// Sustituyo el contenido de 'listaTiendas' por el de 'tiendas'
-	litaTiendas = tiendas;
+	// Sustituyo el contenido de 'tiendasConocidas' por el de 'tiendas'
+	tiendasConocidas = tiendas;
 
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
@@ -459,8 +503,8 @@ function parser_CC2(xml)
 
 
 	var tiendas = [];
-	// De la lista de clientes 'listaTiendas' obtengo todos los elementos con etiqueta 'tienda'
-	var nodoListaT = xml.getElementsByTagName("listaTiendas")[0].getElementsByTagName("tienda");
+	// De la lista de clientes 'tiendasConocidas' obtengo todos los elementos con etiqueta 'tienda'
+	var nodoListaT = xml.getElementsByTagName("tiendasConocidas")[0].getElementsByTagName("tienda");
 	// Por cada nodo 'tienda' de la lista, obtengo sus datos y lo guardo en la lista 'tiendas'
 	for (var i = 0; i < nodoListaT.length; i++)
 	{
@@ -479,8 +523,8 @@ function parser_CC2(xml)
 		}
 		tiendas.push({id:id,ip:ip,tipo:tipo,listaCompra:articulos});
 	}
-	// Sustituyo el contenido de 'listaTiendas' por el de 'tiendas'
-	listaTiendas = tiendas;
+	// Sustituyo el contenido de 'tiendasConocidas' por el de 'tiendas'
+	tiendasConocidas = tiendas;
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }

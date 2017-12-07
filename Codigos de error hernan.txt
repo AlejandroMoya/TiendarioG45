@@ -1,0 +1,9 @@
+200 - Todo va bien
+400 - No reenviar, xml mal formado
+404 - Borrar tienda del listado
+418 - no es para él
+422 - error semantico
+429 - Mensaje de error, 5 segundos para el siguiente.
+415 - no habeis mandado un XML
+
+500 - borrar
