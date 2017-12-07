@@ -24,7 +24,7 @@ function main() {
 	var urlMonitor = '172.19.178.3:8080/monitor/Mensajes/recibir.php'; // OJO:Cambiar por la IP del monitor
 	//var urlMonitor = $("#MonitorInput").val();
 	console.log("El monitor se encuentra en la direccion " + urlMonitor);
-	//AddRow("El monitor se encuentra en la direccion " + urlMonitor);
+	AddRow("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
     tiendasConocidas = [];
 	listaTiendas = [];
@@ -42,7 +42,7 @@ function main() {
 
 	
 	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
-	//AddRow("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
+	AddRow("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
 	// Mensaje de inicio, Cliente --> Monitor
 	var estado = sender(urlMonitor, Create_CM1(idCliente, urlMonitor, ipCliente), urlMonitor);
 	var estoyEnTienda = -1;
@@ -67,18 +67,18 @@ function main() {
 	tiendasConocidas.push({Id:"T1", Direccion:urlMonitor , Tipo:"php" , Visitado: 0})
 	tiendasConocidas.push({Id:"T2", Direccion:"172.19.158.78:5000/sendXML" , Tipo:"py" , Visitado: 1})
 	console.log(productos)
-	//AddRow(productos);
+	AddRow(productos);
 	console.log(tiendasConocidas)
-	//AddRow(tiendasConocidas);
+	AddRow(tiendasConocidas);
 	*/
 	/*
 	var i;
 	while(productos.length!= 0){
 		estoyEnTienda = -1;
 		console.log("Tienes que comprar los siguiente productos")
-		//AddRow("Tienes que comprar los siguiente productos");
+		AddRow("Tienes que comprar los siguiente productos");
 		console.log(productos)
-		//AddRow(productos);
+		AddRow(productos);
 		while(estoyEnTienda == -1){
 			for (i = 0; i< tiendasConocidas.length; i++){
 				if (tiendasConocidas[i].Visitado == 0){
@@ -96,9 +96,9 @@ function main() {
 		}
 		
 		console.log("Tienes que comprar los siguientes productos: ")
-		//AddRow("Tienes que comprar los siguientes productos: ");
+		AddRow("Tienes que comprar los siguientes productos: ");
 		console.log(productos)
-		//AddRow(productos);
+		AddRow(productos);
 		// Si quedan productos por comprar, preguntar por nuevas tiendas
 		if (productos.length != 0){
 			estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Direccion, ipCliente), urlMonitor);
@@ -110,10 +110,10 @@ function main() {
 	
 	
 	console.log("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)")
-	//AddRow("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)");
+	AddRow("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)");
 	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
 	console.log("Cliente ha terminado satisfactoriamente: gracias por jugar");
-	//AddRow("Cliente ha terminado satisfactoriamente: gracias por jugar");*/
+	AddRow("Cliente ha terminado satisfactoriamente: gracias por jugar");*/
 	return 0;
 }
 
@@ -134,14 +134,14 @@ function sender(direccion, mensaje, dirMonitor) {
 
 		beforeSend: function(request) {
 			console.log("Mandando mensaje a: " + direccion);
-			//AddRow("Mandando mensaje a: " + direccion);
+			AddRow("Mandando mensaje a: " + direccion);
 			console.log("Mensaje enviado: " + mensaje)
-			//AddRow("Mensaje enviado: " + mensaje);
+			AddRow("Mensaje enviado: " + mensaje);
 		},
 
 		success: function(response) {
 			console.log("Mensaje recibido de " + direccion + ": " + response);
-			//AddRow("Mensaje recibido de " + direccion + ": " + response);
+			AddRow("Mensaje recibido de " + direccion + ": " + response);
 			estado=0; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
 			// Solo se replicara si el destinatario del mensaje no era el monitor
@@ -156,23 +156,23 @@ function sender(direccion, mensaje, dirMonitor) {
 
 					beforeSend: function(request) {
 						console.log("Mandando mensaje replica a Monitor: " + dirMonitor);
-						//AddRow("Mandando mensaje replica a Monitor: " + dirMonitor);
+						AddRow("Mandando mensaje replica a Monitor: " + dirMonitor);
 						console.log("Mensaje replicado enviado: " + mensaje);
-						//AddRow("Mensaje replicado enviado: " + mensaje);
+						AddRow("Mensaje replicado enviado: " + mensaje);
 					},
 
 					success: function(response) {
 						console.log("Exito mensaje Monitor: " + response);
-						//AddRow("Exito mensaje Monitor: " + response);
+						AddRow("Exito mensaje Monitor: " + response);
 					},
 
 					error: function(response) {
 						console.log("Fallo envio monitor!")
-						//AddRow("Fallo envio monitor!", "red");
+						AddRow("Fallo envio monitor!", "red");
 						console.log("Error " + response.status + ": " + response.statusText);
-						//AddRow("Error " + response.status + ": " + response.statusText, "red");
+						AddRow("Error " + response.status + ": " + response.statusText, "red");
 						console.log(response.responseText);
-						//AddRow(response.responseText, "red");
+						AddRow(response.responseText, "red");
 						estado=2; //Código de error 2: el mensaje no ha llegado al monitor
 						//return estado;
 					}
@@ -207,12 +207,12 @@ function sender(direccion, mensaje, dirMonitor) {
 			}
 			else {
 				console.log("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz);
-				//AddRow("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz, "red");
+				AddRow("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz, "red");
 				
 				console.log("Mensaje: " + response);
-				//AddRow("Mensaje: " + response);
+				AddRow("Mensaje: " + response);
 				console.log("Mensaje parseado: " + response_xml);
-				//AddRow("Mensaje parseado: " + response_xml);
+				AddRow("Mensaje parseado: " + response_xml);
 			}
 			//El estado sigue a cero, por lo tanto todo va bien
 			
@@ -220,9 +220,9 @@ function sender(direccion, mensaje, dirMonitor) {
 
 		error: function(response) {
 			console.log("Error " + response.status + ": " + response.statusText);
-			//AddRow("Error " + response.status + ": " + response.statusText, "red");
+			AddRow("Error " + response.status + ": " + response.statusText, "red");
 			console.log(response.responseText);
-			//AddRow(response.responseText, "red");
+			AddRow(response.responseText, "red");
 			estado=1; //Código de error 1: no ha llegado al destinatario
 		}
 	});
@@ -489,7 +489,7 @@ function parser_CC2(xml)
 // Función encargadad de añadir rows(filas o entradas) en la tabla 'log' de la interfaz.
 // Parámetros:
 // 		- text (string)
-/*
+
 function AddRow(text, danger="black")
 {
 	var tableRef = document.getElementById('tablalog').getElementsByTagName('tbody')[0];
@@ -514,5 +514,3 @@ function AddRow(text, danger="black")
 	newCellnumber.appendChild(newNumber);
 	newCell.appendChild(newText);
 }
-*/
-main()
