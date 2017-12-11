@@ -1,3 +1,15 @@
+<!--
+Cliente HTML
+Rev: 0.5
+Fecha: 11/12/2017
+Autores: Alejandro Moya Moya
+		 Jorge Valero Molina
+		 Francisco Martinez Esteso
+		 Miguel Ángel Cantero Víllora
+UCLM - Escuela Superior de Ingeniería Informática Albacete
+Sistemas Multiagentes 17/18
+-->
+
 <!DOCTYPE html>
 <meta charset="US-ASCII">
 <html>
@@ -23,7 +35,10 @@
             <p>
                 <form class="form-inline" id="formulario" accept-charset=utf-8 style="margin-top:40px">
                     <input type="string" class="form-control mb-2 mr-sm-2 mb-sm-0" id="MonitorInput" placeholder="Escribe la URL del monitor">
-                    <button id="submit" type="submit" class="btn btn-primary" onclick="main(); return false;">OK!</button>
+                    <div class="btn-group" role="group" aria-label="Group">
+                        <button id="submit" type="submit" class="btn btn-primary" onclick="main(); return false;">OK!</button>
+                        <button id="submit" type="submit" class="btn btn-danger" onclick="stop(); return false;">STOP!</button>
+                    </div>
                 </form>
             </p>
             <p>

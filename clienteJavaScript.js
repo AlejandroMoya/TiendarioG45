@@ -1,7 +1,7 @@
 /*
 Cliente JavaScript
 Rev: 0.5
-Fecha: 05/12/2017
+Fecha: 11/12/2017
 Autores: Alejandro Moya Moya
 		 Jorge Valero Molina
 		 Francisco Martinez Esteso
@@ -22,8 +22,7 @@ function main() {
 	idCliente = 0;
 	var urlMonitor = '172.19.178.3:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
 	//var urlMonitor = $("#MonitorInput").val();
-	console.log("El monitor se encuentra en la direccion " + urlMonitor);
-	AddRow("El monitor se encuentra en la direccion " + urlMonitor);
+	consola("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
     tiendasConocidas = [];
 
@@ -40,8 +39,7 @@ function main() {
 	});
 
 	
-	console.log("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
-	AddRow("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)");
+	consola("Cliente iniciado... Enviando mensaje al monitor para arrancar (Mensaje CM1)", "green");
 	// Mensaje de inicio, Cliente --> Monitor
 	var estado = sender(urlMonitor, Create_CM1(idCliente, urlMonitor, ipCliente), urlMonitor);
 	var estoyEnTienda = -1;
@@ -50,15 +48,15 @@ function main() {
 		return 1;
 	}
 	
-	console.log("Has recibido lo siguiente del monitor: ");
-	console.log("IDCliente: " + idCliente);
-	console.log("Listado de la compra:")
-	console.log(productos)
-	console.log("Listado de tiendas conocidas:")
-	console.log(tiendasConocidas)
+	consol("Has recibido lo siguiente del monitor: ");
+	consola("IDCliente: " + idCliente);
+	consola("Listado de la compra:");
+	consola(productos);
+	consola("Listado de tiendas conocidas:");
+	consola(tiendasConocidas);
 	
 	if (productos.length == 0 || tiendasConocidas.length == 0){
-		console.log("ERROR: el monitor no te ha dado bien la lista de productos o las tiendas que conoces.")
+		consola("ERROR: el monitor no te ha dado bien la lista de productos o las tiendas que conoces.", "red");
 		return 1;
 	}
 	
@@ -69,33 +67,29 @@ function main() {
 	productos.push({Nombre: "P2", Cantidad:20})
 	tiendasConocidas.push({Id:"T1", Direccion:urlMonitor , Tipo:"php" , Visitado: 0})
 	tiendasConocidas.push({Id:"T2", Direccion:"172.19.158.78:5000/sendXML" , Tipo:"py" , Visitado: 1})
-	console.log(productos)
-	AddRow(productos);
-	console.log(tiendasConocidas)
-	AddRow(tiendasConocidas);
+	consola(productos);
+	consola(tiendasConocidas);
 	*/
 	
 	var i;
 	
 	while(productos.length!= 0){
 		estoyEnTienda = -1;
-		console.log("Tienes que comprar los siguiente productos")
-		AddRow("Tienes que comprar los siguiente productos");
-		console.log(productos)
-		AddRow(productos);
+		consola("Tienes que comprar los siguiente productos");
+		consola(productos);
 		while(estoyEnTienda == -1){
 			for (i = 0; i< tiendasConocidas.length; i++){
 				if (tiendasConocidas[i].Visitado == 0){
 					estado = sender(tiendasConocidas[i].Direccion, Create_CT1(idCliente, tiendasConocidas[i].Id, ipCliente), urlMonitor);
 					if (estado==101){
-						console.log("Has entrado en la tienda " + tiendasConocidas[i].Direccion)
+						consola("Has entrado en la tienda " + tiendasConocidas[i].Direccion);
 						tiendasConocidas[i].Visitado = 1;
 						estoyEnTienda=i;
 						break;
 					} else if (estado == 100){
-						console.log("La tienda " + tiendasConocidas[i].Direccion + " esta ocupada, intentalo mas tarde");
+						consola("La tienda " + tiendasConocidas[i].Direccion + " esta ocupada, intentalo mas tarde");
 					} else if (estado == 400){
-						console.log("ERROR 400, XML mal formado")
+						consola("ERROR 400, XML mal formado", "red");
 					} else if (estado == 404){
 						tiendasConocidas.splice(i,1);
 						i--;
@@ -104,26 +98,22 @@ function main() {
 			}		
 		}
 		
-		console.log("Tienes que comprar los siguientes productos: ")
-		AddRow("Tienes que comprar los siguientes productos: ");
-		console.log(productos)
-		AddRow(productos);
+		consola("Tienes que comprar los siguientes productos: ")
+		consola(productos);
 		// Si quedan productos por comprar, preguntar por nuevas tiendas
 		//if (productos.length != 0){
 		//	var j = 0;
 		//	while(quedanSinVisitar() == false){
-		//		console.log("Preguntando nuevas tiendas...");
-		//		AddRow("Preguntando nuevas tiendas...");
+		//		consola("Preguntando nuevas tiendas...");
 				estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT4(idCliente, tiendasConocidas[estoyEnTienda].Id, ipCliente), urlMonitor);
 		//		if (j == 20){
-		//			console.log("ERROR: el sistema no ha sido capaz de proporcionar nuevas tiendas...");
-		//			AddRow("ERROR: el sistema no ha sido capaz de proporcionar nuevas tiendas...");
+		//			consola("ERROR: el sistema no ha sido capaz de proporcionar nuevas tiendas...", "red");
 		//			break;
 		//		}
 		//		j++;
 		//	}
 		//}
-		console.log("Saliendo de la tienda: " + tiendasConocidas[estoyEnTienda].Id)
+		consola("Saliendo de la tienda: " + tiendasConocidas[estoyEnTienda].Id)
 		estado = sender(tiendasConocidas[estoyEnTienda].Direccion, Create_CT6(idCliente, tiendasConocidas[estoyEnTienda].Id, ipCliente), urlMonitor);
 		//if (j == 20){
 		//	break;
@@ -134,11 +124,9 @@ function main() {
 	}
 	
 	
-	console.log("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)")
-	AddRow("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)");
+	consola("Enviando mensaje al monitor para finalizar el cliente (Mensaje CM3)");
 	var estado = sender(urlMonitor, Create_CM3(idCliente, urlMonitor, ipCliente), urlMonitor);
-	console.log("Cliente ha terminado satisfactoriamente: gracias por jugar");
-	AddRow("Cliente ha terminado satisfactoriamente: gracias por jugar");
+	consola("Cliente ha terminado satisfactoriamente: gracias por jugar");
 	return 0;
 }
 
@@ -165,15 +153,12 @@ function sender(direccion, mensaje, dirMonitor) {
 		contentType: 'text/xml',
 
 		beforeSend: function(request) {
-			console.log("Mandando mensaje a: " + direccion);
-			AddRow("Mandando mensaje a: " + direccion);
-			console.log("Mensaje enviado: " + mensaje)
-			AddRow("Mensaje enviado: " + mensaje);
+			consola("Mandando mensaje a: " + direccion);
+			consola("Mensaje enviado: " + mensaje);
 		},
 
 		success: function(response) {
-			console.log("Mensaje recibido de " + direccion + ": " + response);
-			AddRow("Mensaje recibido de " + direccion + ": " + response);
+			consola("Mensaje recibido de " + direccion + ": " + response, "gren");
 			estado=200; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se replica al monitor
 			// Solo se replicara si el destinatario del mensaje no era el monitor
@@ -205,13 +190,10 @@ function sender(direccion, mensaje, dirMonitor) {
 				parser_CC2(response_xml);
 			}
 			else {
-				console.log("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz);
-				AddRow("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz, "red");
+				consola("ERROR: mensaje desconocido" + "Raiz Obtenida: " + raiz, "red");
 				
-				console.log("Mensaje: " + response);
-				AddRow("Mensaje: " + response);
-				console.log("Mensaje parseado: " + response_xml);
-				AddRow("Mensaje parseado: " + response_xml);
+				consola("Mensaje: " + response);
+				consola("Mensaje parseado: " + response_xml);
 			}
 			if (direccion !== dirMonitor){
 				var estadoMonitor = -1;
@@ -225,10 +207,8 @@ function sender(direccion, mensaje, dirMonitor) {
 		},
 
 		error: function(response) {
-			console.log("Error " + response.status + ": " + response.statusText);
-			AddRow("Error " + response.status + ": " + response.statusText, "red");
-			console.log(response.responseText);
-			AddRow(response.responseText, "red");
+			consola("Error " + response.status + ": " + response.statusText, "red");
+			consola(response.responseText);
 			estado=response.status;
 		}
 	});
@@ -246,25 +226,19 @@ function replicador(urlMonitor, mensaje){
 		contentType: 'text/xml',
 
 		beforeSend: function(request) {
-			console.log("Mandando mensaje replica a Monitor: " + urlMonitor);
-			AddRow("Mandando mensaje replica a Monitor: " + urlMonitor);
-			console.log("Mensaje replicado enviado: " + mensaje);
-			AddRow("Mensaje replicado enviado: " + mensaje);
+			consola("Mandando mensaje replica a Monitor: " + urlMonitor);
+			consola("Mensaje replicado enviado: " + mensaje);
 		},
 
 		success: function(response) {
-			console.log("Exito mensaje Monitor: " + response);
-			AddRow("Exito mensaje Monitor: " + response);
+			consola("Exito mensaje Monitor: " + response, "green");
 			estado = 0;
 		},
 
 		error: function(response) {
-			console.log("Fallo envio monitor!")
-			AddRow("Fallo envio monitor!", "red");
-			console.log("Error " + response.status + ": " + response.statusText);
-			AddRow("Error " + response.status + ": " + response.statusText, "red");
-			console.log(response.responseText);
-			AddRow(response.responseText, "red");
+			consola("Fallo envio monitor!", "red");
+			consola("Error " + response.status + ": " + response.statusText, "red");
+			consola(response.responseText);
 			estado=2; //Código de error 2: el mensaje no ha llegado al monitor
 			//return estado;
 		}
@@ -534,8 +508,7 @@ function parser_CC2(xml)
 // Parámetros:
 // 		- text (string)
 
-function AddRow(text, danger="black")
-{
+function AddRow(text, danger="black"){
 	var tableRef = document.getElementById('tablalog').getElementsByTagName('tbody')[0];
 	
 	// Insert a row in the table at the last row
@@ -544,8 +517,8 @@ function AddRow(text, danger="black")
 	if (danger == "red") {
 		newRow.className = "bg-danger";
 	}
-	if (danger == "yellow") {
-		newRow.className = "bg-warning";
+	if (danger == "green") {
+		newRow.className = "bg-success";
 	}
 	
 	// Insert a cell in the row at index 0
@@ -557,4 +530,13 @@ function AddRow(text, danger="black")
 	var newText  = document.createTextNode(text);
 	newCellnumber.appendChild(newNumber);
 	newCell.appendChild(newText);
+}
+
+function consola(msg, danger="black"){
+	console.log(msg);
+	AddRow(msg, danger);	
+}
+
+function stop(){
+	location.reload();	
 }
