@@ -45,6 +45,7 @@ function main() {
 	
 	// Si el mensaje no ha sido mandado paramos la ejecución del programa
 	if (estado != 200){
+		consola("Error al enviar mensaje al monitor, terminando ejecucion del cliente... :(","red");
 		return 1;
 	}
 	
@@ -73,7 +74,7 @@ function main() {
 	*/
 	
 	var i;
-	var estoyEnTienda = -1;
+	var estoyEnTienda;
 	// El agente se conectará a las diferentes tiendas hasta que obtenga todos los productos deseados
 	while(productos.length!= 0){
 		// Indicamos que no estamos en una tienda
@@ -120,8 +121,8 @@ function main() {
 		
 		consola("Tienes que comprar los siguientes productos: ")
 		consola(productos);
-		// Si quedan productos por comprar y si quedan tiendas por visitar, preguntamos por nuevas tiendas
-		if (productos.length != 0 && quedanSinVisitar() == true){
+		// Si quedan productos por comprar, preguntamos por nuevas tiendas
+		if (productos.length != 0){
 			// Inicializamos un contador de veces que preguntamos a una tienda
 			var j = 0;
 			do{
@@ -148,7 +149,7 @@ function main() {
 					break;
 				}
 				j++;
-			while (quedanSinVisitar() == false)}
+			}while (quedanSinVisitar() == false && estoyEnTienda != -1)
 		}
 		
 		// Si la ejecucion no ha fallado y seguimos en una tienda, le indicamos que vamos a salir
@@ -282,6 +283,7 @@ function sender(direccion, mensaje, dirMonitor) {
 	return estado;
 }
 
+// Funcion encargada de enviar un mensaje al monitor, unicamente aquellos mensajes cuya respuesta no debamos analizar (la replica de un mensaje)
 function replicador(urlMonitor, mensaje){
 	var estado = -1;
 	$.ajax({
@@ -314,7 +316,7 @@ function replicador(urlMonitor, mensaje){
 }
 
 
-// Funciones de creacion de mensajes XML
+// **************** Funciones de creacion de mensajes XML **************** //
 // Mensajes Cliente -> Monitor
 // Mensaje de inicio
 function Create_CM1(idCliente, urlMonitor, ipCliente){
@@ -330,6 +332,7 @@ function Create_CM1(idCliente, urlMonitor, ipCliente){
 	return xml.replace('\t','').replace('\n','');
 }
 
+// Mensaje Cliente -> Monitor
 // Mensaje de fin
 function Create_CM3(idCliente, urlMonitor, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
@@ -382,6 +385,9 @@ function Create_CT1(idCliente, idTienda, ipCliente){
 	return xml.replace('\t','').replace('\n','');
 }
 
+// **************** Funciones de tratado de respuestas de los mensajes XML recibidos **************** //
+// Mensaje Cliente -> Tienda
+// Mensaje en el que se pide nuevas tiendas a visitar
 function Create_CT4(idCliente, idTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT4>\
@@ -396,7 +402,8 @@ function Create_CT4(idCliente, idTienda, ipCliente){
 	return xml.replace('\t','').replace('\n','');
 }
 
-
+// Mensaje Cliente -> Tienda
+// Mensaje en el que el cliente se despide de la tienda
 function Create_CT6(idCliente, idTienda, ipCliente){
 	xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
 <CT6>\
@@ -411,23 +418,7 @@ function Create_CT6(idCliente, idTienda, ipCliente){
 	return xml.replace('\t','').replace('\n','');
 }
 
-/* Este mensaje ya no se encuentra en la especificacion, se deberia de borrar ya
-// Mensajes Cliente -> Cliente (Es Tienda!!!)
-// Un cliente le pide a otro (una tienda!!!!) que le de el listado de tiendas
-function Create_CC1(idCliente, urlTienda, ipCliente){
-	xml = '<?xml version="1.0" encoding="UTF-8"?>\
-<CC1>\
-<emisor>' + idCliente + '</emisor>\
-<receptor>' + urlTienda + '</receptor>\
-<time>\
-<timestamp>' + Date.now() + '</timestamp>\
-<generador>' + ipCliente + '</generador>\
-</time>\
-</CC1>';
 
-	return xml.replace('\t','').replace('\n','');
-}
-*/
 
 // Este mensaje se recibirá cuando enviemos el mensaje CM1 (mensaje de inicialización)
 // Este mensaje es una respuesta del monitor y con este mensaje se obtendrán las tiendas que conocemos y los productos que tenemos que comprar.
@@ -483,8 +474,8 @@ function parser_TC3(xml){
 		//Obtenemos la posicion donde se encontraria el producto que hemos comprado en nuestra lista de compra
 		//var posicion = productos.indexOf(producto); NO FUNCIONA
 		var posicion = -1;
-		for(var j=0; j< productos.length; j++){
-			if (productos[j].Nombre = producto.Nombre){
+		for(var j=0; j < productos.length; j++){
+			if (productos[j].Nombre == producto.Nombre){
 				posicion = j;
 				break;
 			}
@@ -505,23 +496,19 @@ function parser_TC3(xml){
 
 // Este mensaje se recibirá cuando enviemos el mensaje CT4 (Dame Tiendas conocidas)
 // Este mensaje es una respuesta de la tienda.
-function parser_TC5(xml)
-{
+function parser_TC5(xml){
 
-	var tiendas = [];
-	// De la lista de clientes 'listaC' obtengo todos los elementos con etiqueta 'cliente'
+	// De la lista de tiendas 'tiendaT' obtengo todos los elementos con etiqueta 'tienda'
 	var nodoListaT = xml.getElementsByTagName("listaT")[0].getElementsByTagName("tienda");
-	// Por cada nodo 'cliente' de la lista, obtengo el identificador y lo añado a la lista 'clientes'
+	// Por cada nodo 'tienda' de la lista, obtengo el identificador, la direccion y el tipo, y lo añado al vector de tiendasConocidas
 	for (var i = 0; i < nodoListaT.length; i++)
 	{
-		var nom = nodoListaT[i].getElementsByTagName("idTienta")[0].innerHTML;
-		var cant = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
-		var cant = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
-		var art = {nombre: nom, cantidad: cant}
-		tiendas.push(art);
+		var id = nodoListaT[i].getElementsByTagName("idTienta")[0].innerHTML;
+		var direccion = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
+		var tipo = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
+		var tienda = {Id: id, Direccion: direccion, Tipo: tipo, Visitado: 0};
+		tiendasConocidas.push(tienda);
 	}
-	// Sustituyo el contenido de 'tiendasConocidas' por el de 'tiendas'
-	tiendasConocidas = tiendas;
 
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
@@ -529,50 +516,13 @@ function parser_TC5(xml)
 
 // Este mensaje se recibe al enviar CT6 (Adiós)
 // Confirmación de FIN (compra realizada y terminada)
-function parser_TC7(xml)
-{
-
+function parser_TC7(xml){
 	// Codigo de acierto 0: todo se ha parseado correctamente.
 	return 0;
 }
 
-/* ACTUALMENTE EL CLIENTE NO PUEDE RECIBIR MENSAJES DE OTROS CLIENTES!!!!
-// Respuesta de CC1 (Dame lista de tiendas conocidas)
-function parser_CC2(xml)
-{
 
-
-	var tiendas = [];
-	// De la lista de clientes 'tiendasConocidas' obtengo todos los elementos con etiqueta 'tienda'
-	var nodoListaT = xml.getElementsByTagName("tiendasConocidas")[0].getElementsByTagName("tienda");
-	// Por cada nodo 'tienda' de la lista, obtengo sus datos y lo guardo en la lista 'tiendas'
-	for (var i = 0; i < nodoListaT.length; i++)
-	{
-		var id = nodoListaT[i].getElementsByTagName("id")[0].innerHTML;
-		var ip = nodoListaT[i].getElementsByTagName("ip")[0].innerHTML;
-		var tipo = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
-		var nodoListaC = nodoListaT[i].getElementsByTagName("listaCompras")[0].getElementsByTagName("producto");
-		var articulos = [];
-		// Obtengo la lista de productos en 'listaCompras'
-		for (var i = 0; i < nodoListaC.length; i++)
-		{
-			var nom = nodoListaC[i].getElementsByTagName("nombre")[0].innerHTML;
-			var cant = nodoListaC[i].getElementsByTagName("cantidad")[0].innerHTML;
-			var art = {nombre: nom, cantidad: cant}
-			articulos.push(art);
-		}
-		tiendas.push({id:id,ip:ip,tipo:tipo,listaCompra:articulos});
-	}
-	// Sustituyo el contenido de 'tiendasConocidas' por el de 'tiendas'
-	tiendasConocidas = tiendas;
-	// Codigo de acierto 0: todo se ha parseado correctamente.
-	return 0;
-}
-*/
-
-// Función encargadad de añadir rows(filas o entradas) en la tabla 'log' de la interfaz.
-// Parámetros:
-// 		- text (string)
+// Función encargada de añadir rows(filas o entradas) en la tabla 'log' de la interfaz.
 
 function AddRow(text, danger="black"){
 	var tableRef = document.getElementById('tablalog').getElementsByTagName('tbody')[0];
@@ -598,11 +548,13 @@ function AddRow(text, danger="black"){
 	newCell.appendChild(newText);
 }
 
+// Funcion encargada de hacer un cosole.log y a su vez, hace un "AddRow" para imprimir el mensaje tambien en la interfaz
 function consola(msg, danger="black"){
 	console.log(msg);
 	AddRow(msg, danger);	
 }
 
+// Funcion que reinicia el programa
 function stop(){
 	location.reload();	
 }
