@@ -15,10 +15,12 @@ var tiendasConocidas;
 var idCliente;
 // Contador para insertar mensajes en el log
 var num = 0;
+var tiempoEjecucion;
 
 // Producto: {Nombre: , Cantidad: }
 // tiendasConocidas: {Id: , Direccion: , Tipo: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
+	tiempoEjecucion = Date.now();
 	idCliente = 0;
 	var urlMonitor = '172.19.182.103:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
 	//var urlMonitor = $("#MonitorInput").val();
@@ -181,7 +183,9 @@ function main() {
 	mostrarProductos(productos);
 	consola("Listado de tiendas conocidas:");
 	mostrarTiendas(tiendasConocidas);
-	consola("El cliente ha terminado la ejecucion satisfactoriamente: gracias por jugar");
+	consola("El cliente ha terminado la ejecucion satisfactoriamente: gracias por jugar","green");
+	tiempoEjecucion=Date.now() - tiempoEjecucion;
+	consola("El cliente ha tardado en comprar: " + tiempoEjecucion, "green");
 	return 0;
 }
 
