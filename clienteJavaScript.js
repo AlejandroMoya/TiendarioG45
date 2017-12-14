@@ -185,6 +185,7 @@ function main() {
 	mostrarTiendas(tiendasConocidas);
 	consola("El cliente ha terminado la ejecucion satisfactoriamente: gracias por jugar","green");
 	tiempoEjecucion=Date.now() - tiempoEjecucion;
+	tiempoEjecucion/=1000;
 	consola("El cliente ha tardado en comprar: " + tiempoEjecucion, "green");
 	return 0;
 }
