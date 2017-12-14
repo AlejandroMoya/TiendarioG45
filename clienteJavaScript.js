@@ -20,7 +20,7 @@ var num = 0;
 // tiendasConocidas: {Id: , Direccion: , Tipo: , Visitado: (0 no visitada, 1 visitada)}
 function main() {
 	idCliente = 0;
-	var urlMonitor = '172.19.178.3:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
+	var urlMonitor = '172.19.182.103:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
 	//var urlMonitor = $("#MonitorInput").val();
 	consola("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
@@ -503,7 +503,7 @@ function parser_TC5(xml){
 	// Por cada nodo 'tienda' de la lista, obtengo el identificador, la direccion y el tipo, y lo añado al vector de tiendasConocidas
 	for (var i = 0; i < nodoListaT.length; i++)
 	{
-		var id = nodoListaT[i].getElementsByTagName("idTienta")[0].innerHTML;
+		var id = nodoListaT[i].getElementsByTagName("idTienda")[0].innerHTML;
 		var direccion = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
 		var tipo = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
 		var tienda = {Id: id, Direccion: direccion, Tipo: tipo, Visitado: 0};
