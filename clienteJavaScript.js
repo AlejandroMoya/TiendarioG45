@@ -52,9 +52,9 @@ function main() {
 	consola("Has recibido lo siguiente del monitor: ");
 	consola("IDCliente: " + idCliente);
 	consola("Listado de la compra:");
-	consola(productos);
+	mostrarProductos(productos);
 	consola("Listado de tiendas conocidas:");
-	consola(tiendasConocidas);
+	mostrarTiendas(tiendasConocidas);
 	
 	// Comprobamos si hemos recibido productos para comprar, lista de tiendas para visitar o un ID adecuado
 	if (productos.length == 0 || tiendasConocidas.length == 0 || idCliente == 0){
@@ -80,7 +80,7 @@ function main() {
 		// Indicamos que no estamos en una tienda
 		estoyEnTienda = -1;
 		consola("Tienes que comprar los siguiente productos");
-		consola(productos);
+		mostrarProductos(productos);
 		// Mientras que no hayamos entrado en una tienda... intentamos entrar en alguna
 		while(estoyEnTienda == -1){
 			// Recorremos el vector de las tiendas conocidas
@@ -120,7 +120,7 @@ function main() {
 		}
 		
 		consola("Tienes que comprar los siguientes productos: ")
-		consola(productos);
+		mostrarProductos(productos);
 		// Si quedan productos por comprar, preguntamos por nuevas tiendas
 		if (productos.length != 0){
 			// Inicializamos un contador de veces que preguntamos a una tienda
@@ -178,9 +178,9 @@ function main() {
 	consola("Has terminado con la siguiente informacion: ");
 	consola("IDCliente: " + idCliente);
 	consola("Listado de la compra:");
-	consola(productos);
+	mostrarProductos(productos);
 	consola("Listado de tiendas conocidas:");
-	consola(tiendasConocidas);
+	mostrarTiendas(tiendasConocidas);
 	consola("El cliente ha terminado la ejecucion satisfactoriamente: gracias por jugar");
 	return 0;
 }
@@ -196,6 +196,23 @@ function quedanSinVisitar(){
 	}
 	// Si no la encontramos devolvemos que no
 	return false;
+}
+
+
+function mostrarProductos(array){
+	
+	for (var i=0; i<array.length; i++){
+		consola("        Nombre: " + array[i].Nombre +"       " + "Cantidad: " + array[i].Cantidad,"blue");
+	}
+	consola("Productos:");
+}
+
+function mostrarTiendas(array){
+	
+	for (var i=0; i<array.length; i++){
+		consola("    ID: " + array[i].Id +"   " + "Direccion: " + array[i].Direccion + "    Tipo: " + array[i].Tipo, "blue");
+	}
+	consola("Tiendas:");
 }
 
 
@@ -535,6 +552,9 @@ function AddRow(text, danger="black"){
 	}
 	if (danger == "green") {
 		newRow.className = "bg-success";
+	}
+	if (danger == "blue") {
+		newRow.className = "bg-primary";
 	}
 	
 	// Insert a cell in the row at index 0
