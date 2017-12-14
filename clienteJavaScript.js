@@ -212,7 +212,7 @@ function mostrarProductos(array){
 function mostrarTiendas(array){
 	
 	for (var i=0; i<array.length; i++){
-		consola("    ID: " + array[i].Id +"   " + "Direccion: " + array[i].Direccion + "    Tipo: " + array[i].Tipo, "blue");
+		consola("    ID: " + array[i].Id +"   " + "Direccion: " + array[i].Direccion + "    Tipo: " + array[i].Tipo + "   V: " + array[i].Visitado, "blue");
 	}
 	consola("Tiendas:");
 }

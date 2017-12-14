@@ -1,3 +1,6 @@
 [1207/192541.515:ERROR:process_info.cc(632)] range at 0x351942e200000000, size 0x290 fully unreadable
 [1207/192541.519:ERROR:process_info.cc(632)] range at 0x3519434600000000, size 0x290 fully unreadable
 [1207/192541.519:ERROR:process_info.cc(632)] range at 0x0, size 0x290 fully unreadable
+[1214/191151.413:ERROR:process_info.cc(632)] range at 0x4bc942bc00000000, size 0x2a8 fully unreadable
+[1214/191151.416:ERROR:process_info.cc(632)] range at 0x4bc9432200000000, size 0x2a8 fully unreadable
+[1214/191151.416:ERROR:process_info.cc(632)] range at 0x0, size 0x2a8 fully unreadable
