@@ -200,7 +200,9 @@ function quedanSinVisitar(){
 
 
 function mostrarProductos(array){
-	
+	if (array.length == 0){
+		consola("No hay nada que comprar","green");
+	}
 	for (var i=0; i<array.length; i++){
 		consola("        Nombre: " + array[i].Nombre +"       " + "Cantidad: " + array[i].Cantidad,"blue");
 	}
@@ -312,8 +314,8 @@ function replicador(urlMonitor, mensaje){
 		contentType: 'text/xml',
 
 		beforeSend: function(request) {
-			consola("Mandando mensaje replica a Monitor: " + urlMonitor);
-			consola("Mensaje replicado enviado: " + mensaje);
+			//consola("Mandando mensaje replica a Monitor: " + urlMonitor);
+			//consola("Mensaje replicado enviado: " + mensaje);
 		},
 
 		success: function(response) {
