@@ -526,7 +526,12 @@ function parser_TC5(xml){
 		var direccion = nodoListaT[i].getElementsByTagName("direccion")[0].innerHTML;
 		var tipo = nodoListaT[i].getElementsByTagName("tipo")[0].innerHTML;
 		var tienda = {Id: id, Direccion: direccion, Tipo: tipo, Visitado: 0};
-		tiendasConocidas.push(tienda);
+		if (tienda in tiendasConocidas){
+			consola("Tienda repetida!!","red");
+		}else{
+			tiendasConocidas.push(tienda);
+		}
+		
 	}
 
 	// Codigo de acierto 0: todo se ha parseado correctamente.
