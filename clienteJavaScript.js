@@ -225,7 +225,7 @@ function mostrarTiendas(array){
 
 // Función que nos permite mandar un XML dada la URL de envio (direccion) y el mensaje (mensaje)
 function sender(direccion, mensaje, dirMonitor) {
-	// Mensaje enviado a la direccion deseada
+	// Mensaje no enviado a la direccion deseada
 	var estado=-1;
 	$.ajax({
 		url: 'http://' + direccion.replace("http://", "").replace(/\/\//g,"/"),
@@ -241,9 +241,9 @@ function sender(direccion, mensaje, dirMonitor) {
 			consola("Mensaje enviado: " + mensaje);
 		},
 
-		// Funcion que se ejecuta si se ha recibido respuesta del agente
+		// Funcion que se ejecuta si se ha enviado correctamente y se ha recibido respuesta del agente
 		success: function(response) {
-			consola("Mensaje recibido de " + direccion + ": " + response, "gren");
+			consola("Mensaje recibido de " + direccion + ": " + response, "green");
 			estado=200; //Acierto, todo va bien
 			// Dado que el mensaje se ha enviado correctamente, se procede a procesar la respuesta obtenida
 			var parser = new DOMParser();
@@ -288,7 +288,9 @@ function sender(direccion, mensaje, dirMonitor) {
 			// Si la direccion de envio es distinta a la direccion del monitor, replicamos el mensaje
 			if (direccion !== dirMonitor){
 				var estadoMonitor = -1;
+				//Mientras que de error al replicar el mensaje al monitor, seguimos intentandolo.
 				while (estadoMonitor == -1){
+					//devolvera cero si se replica correctamente
 					estadoMonitor = replicador(dirMonitor,mensaje);
 				}
 
@@ -296,7 +298,7 @@ function sender(direccion, mensaje, dirMonitor) {
 			
 		},
 
-		// Funcion que se ejecuta, si no se ha recibido un mensaje de error del sistema de envio
+		// Funcion que se ejecuta, si se ha recibido un mensaje de error del sistema de envio
 		error: function(response) {
 			consola("Error " + response.status + ": " + response.statusText, "red");
 			consola(response.responseText);
@@ -319,19 +321,23 @@ function replicador(urlMonitor, mensaje){
 		contentType: 'text/xml',
 
 		beforeSend: function(request) {
+			//No mostramos mas mensajes por no sobrecargar la consola
 			//consola("Mandando mensaje replica a Monitor: " + urlMonitor);
 			//consola("Mensaje replicado enviado: " + mensaje);
 		},
-
+		//Cuando el mensaje se envia correctamente y recibimos la respuesta, se ejecuta esta funcion.
 		success: function(response) {
 			consola("Exito mensaje Monitor: " + response, "green");
+			//cambiamos el estado para salir del while del sender
 			estado = 0;
 		},
-
+		// Funcion que se ejecuta, si se ha recibido un mensaje de error del sistema de envio
 		error: function(response) {
 			consola("Fallo envio monitor!", "red");
+			//mostramos el error
 			consola("Error " + response.status + ": " + response.statusText, "red");
 			consola(response.responseText);
+			//cambiamos el estado a error para seguir en el while del sender
 			estado=-1; 
 		}
 	});
