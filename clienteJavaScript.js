@@ -22,7 +22,7 @@ var tiempoEjecucion;
 function main() {
 	tiempoEjecucion = Date.now();
 	idCliente = 0;
-	var urlMonitor = '172.19.182.103:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
+	var urlMonitor = '172.19.149.110:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
 	//var urlMonitor = $("#MonitorInput").val();
 	consola("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
