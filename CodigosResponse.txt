@@ -1,6 +1,0 @@
-0 -> Todo OK
-1 -> No ha llegado al destinatario
-2 -> Mensaje no ha llegado al monitor
-
-100 -> Tienda ocupada
-101 -> Compra OK

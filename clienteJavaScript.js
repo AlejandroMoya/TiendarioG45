@@ -1,7 +1,7 @@
 /*
 Cliente JavaScript
-Rev: 0.5
-Fecha: 11/12/2017
+Rev: 0.6 (Final)
+Fecha: 21/12/2017
 Autores: Alejandro Moya Moya
 		 Jorge Valero Molina
 		 Francisco Martinez Esteso
@@ -22,8 +22,8 @@ var tiempoEjecucion;
 function main() {
 	tiempoEjecucion = Date.now();
 	idCliente = 0;
-	var urlMonitor = '172.19.149.110:8080/monitor/Mensajes/recibir.php'; // OJO: ponerlo en el html
-	//var urlMonitor = $("#MonitorInput").val();
+	var urlMonitor = $("#MonitorInput").val();
+	//urlMonitor = '172.19.149.110:8080/monitor/Mensajes/recibir.php'; // OJO: si siempre se va usar la misma, descomentar esta linea.
 	consola("El monitor se encuentra en la direccion " + urlMonitor);
 	productos = [];
     tiendasConocidas = [];
